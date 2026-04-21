@@ -110,6 +110,108 @@ retract_if_there(Goal) :-
     (   Goal -> retract(Goal) ; true ).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Piece movement rules
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+piece_move(Side,pawn,From,To,Pos) :-
+    pawn_move(Side,From,To,Pos).
+piece_move(_Side,knight,From,To,_Pos) :-
+    knight_move(From,To).
+piece_move(_Side,bishop,From,To,Pos) :-
+    bishop_move(From,To,Pos).
+piece_move(_Side,rook,From,To,Pos) :-
+    rook_move(From,To,Pos).
+piece_move(_Side,queen,From,To,Pos) :-
+    queen_move(From,To,Pos).
+piece_move(_Side,king,From,To,_Pos) :-
+    king_move(From,To).
+
+% Pawns (no en passant, no promotion)
+pawn_move(white,square(X,Y),square(X,Y2),Pos) :-
+    Y2 is Y+1,
+    Y2 =< 8,
+    \+ contents(_,_,square(X,Y2),Pos).
+pawn_move(white,square(X,2),square(X,4),Pos) :-
+    \+ contents(_,_,square(X,3),Pos),
+    \+ contents(_,_,square(X,4),Pos).
+pawn_move(white,square(X,Y),square(X2,Y2),Pos) :-
+    Y2 is Y+1,
+    member(DX,[-1,1]),
+    X2 is X+DX,
+    contents(black,_,square(X2,Y2),Pos).
+
+pawn_move(black,square(X,Y),square(X,Y2),Pos) :-
+    Y2 is Y-1,
+    Y2 >= 1,
+    \+ contents(_,_,square(X,Y2),Pos).
+pawn_move(black,square(X,7),square(X,5),Pos) :-
+    \+ contents(_,_,square(X,6),Pos),
+    \+ contents(_,_,square(X,5),Pos).
+pawn_move(black,square(X,Y),square(X2,Y2),Pos) :-
+    Y2 is Y-1,
+    member(DX,[-1,1]),
+    X2 is X+DX,
+    contents(white,_,square(X2,Y2),Pos).
+
+% Knights
+knight_move(square(X,Y),square(X2,Y2)) :-
+    member((DX,DY),[(1,2),(2,1),(-1,2),(-2,1),(1,-2),(2,-1),(-1,-2),(-2,-1)]),
+    X2 is X+DX,
+    Y2 is Y+DY,
+    square(X2,Y2).
+
+% Kings (no castling)
+king_move(square(X,Y),square(X2,Y2)) :-
+    between(-1,1,DX),
+    between(-1,1,DY),
+    (DX \= 0 ; DY \= 0),
+    X2 is X+DX,
+    Y2 is Y+DY,
+    square(X2,Y2).
+
+% Sliding pieces
+bishop_move(From,To,Pos) :-
+    diagonal_path(From,To,Path),
+    path_clear(Path,Pos).
+
+rook_move(From,To,Pos) :-
+    straight_path(From,To,Path),
+    path_clear(Path,Pos).
+
+queen_move(From,To,Pos) :-
+    (   bishop_move(From,To,Pos)
+    ;   rook_move(From,To,Pos)
+    ).
+
+diagonal_path(square(X,Y),square(X2,Y2),Path) :-
+    DX is sign(X2-X),
+    DY is sign(Y2-Y),
+    DX =\= 0,
+    DY =\= 0,
+    abs(X2-X) =:= abs(Y2-Y),
+    collect_path(square(X,Y),DX,DY,square(X2,Y2),Path).
+
+straight_path(square(X,Y),square(X2,Y2),Path) :-
+    (   X =:= X2, DY is sign(Y2-Y), DX = 0
+    ;   Y =:= Y2, DX is sign(X2-X), DY = 0
+    ),
+    collect_path(square(X,Y),DX,DY,square(X2,Y2),Path).
+
+collect_path(square(X,Y),DX,DY,square(X2,Y2),Path) :-
+    Xn is X+DX,
+    Yn is Y+DY,
+    (   Xn =:= X2, Yn =:= Y2
+    ->  Path = []
+    ;   Path = [square(Xn,Yn)|Rest],
+        collect_path(square(Xn,Yn),DX,DY,square(X2,Y2),Rest)
+    ).
+
+path_clear([], _Pos).
+path_clear([Sq|Rest], Pos) :-
+    \+ contents(_,_,Sq,Pos),
+    path_clear(Rest, Pos).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Sliding pieces (queen, bishop, rook)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
