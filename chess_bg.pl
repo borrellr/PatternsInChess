@@ -161,13 +161,38 @@ knight_move(square(X,Y),square(X2,Y2)) :-
     square(X2,Y2).
 
 % Kings (no castling)
-king_move(square(X,Y),square(X2,Y2)) :-
-    between(-1,1,DX),
-    between(-1,1,DY),
-    (DX \= 0 ; DY \= 0),
-    X2 is X+DX,
-    Y2 is Y+DY,
-    square(X2,Y2).
+%king_move(square(X,Y),square(X2,Y2)) :-
+%    between(-1,1,DX),
+%    between(-1,1,DY),
+%    (DX \= 0 ; DY \= 0),
+%    X2 is X+DX,
+%    Y2 is Y+DY,
+%    square(X2,Y2).
+
+% Kings (no castling)
+king_move(square(X,Y), square(X2,Y2)) :-
+    X2 is X + 1, Y2 is Y, square(X2, Y2).
+
+king_move(square(X,Y), square(X2,Y2)) :-
+    X2 is X + 1, Y2 is Y + 1, square(X2, Y2).
+
+king_move(square(X,Y), square(X2,Y2)) :-
+    X2 is X, Y2 is Y + 1, square(X2, Y2).
+
+king_move(square(X,Y), square(X2,Y2)) :-
+    X2 is X - 1, Y2 is Y + 1, square(X2, Y2).
+
+king_move(square(X,Y), square(X2,Y2)) :-
+    X2 is X - 1, Y2 is Y, square(X2, Y2).
+
+king_move(square(X,Y), square(X2,Y2)) :-
+    X2 is X - 1, Y2 is Y - 1, square(X2, Y2).
+
+king_move(square(X,Y), square(X2,Y2)) :-
+    X2 is X, Y2 is Y - 1, square(X2, Y2).
+
+king_move(square(X,Y), square(X2,Y2)) :-
+    X2 is X + 1, Y2 is Y - 1, square(X2, Y2).
 
 % Sliding pieces
 bishop_move(From,To,Pos) :-
